@@ -1,18 +1,21 @@
 ---
-- name: Install docker
-  hosts: container_hosts
-  become: true
+- name: Install docker on Ubuntu 22.04
+  hosts: all
+  become: yes
   tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+    
     - name: Install dependencies
       apt:
-        name: "{{ item }}"
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+          - python3-pip
         state: present
-      with_items:
-        - apt-transport-https
-        - ca-certificates
-        - curl
-        - gnupg
-        - lsb-release
 
     - name: Add Docker GPG key
       apt_key:
@@ -26,8 +29,12 @@
 
     - name: Install docker-ce
       apt:
-        name: docker-ce
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - container.io
         state: present
+        update_cache: yes
 
     - name: Add user to Docker group
       user:
@@ -35,7 +42,14 @@
         groups: docker
         append: yes
 
-    - name: Start Docker service
+    - name: Ensure Start Docker service
       service:
         name: docker
+        enabled: yes
         state: started
+      
+    - name: Add Docker Python Module
+      pip:
+        name:
+          - docker
+          - docker-compose
